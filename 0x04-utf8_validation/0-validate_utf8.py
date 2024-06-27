@@ -1,48 +1,28 @@
 #!/usr/bin/python3
-"""
-Module for UTF-8 validation.
-"""
+"""This Module defines the `validUTF8` function."""
+
 
 def validUTF8(data):
     """
-    Determines if a given data set represents a valid UTF-8 encoding.
-    
+    Check if a given data set represents a valid UTF-8 encoding.
+
     Args:
-        data (List[int]): A list of integers representing the data set.
-    
-    Returns:
-        bool: True if data is a valid UTF-8 encoding, else False.
+        data: a list of integers,
+              Each integer is [0-255] represents 1 byte of data (0-255),
+              so we only handle the 8 least significant bits of each integer.
+              can contain multiple characters.
+              A character in UTF-8 can be 1 to 4 bytes long.
+
+    Return:
+        True if data is a valid UTF-8 encoding, else return False
     """
-    # Number of bytes in the current UTF-8 character
-    num_bytes = 0
+    for i in range(len(data)):
+        if data[i] < 0 or data[i] > 255:
+            # handle only the 8 least significant bits
+            data[i] = int(bin(data[i])[-8:], 2)
 
-    # Masks to check the most significant bits
-    mask1 = 1 << 7
-    mask2 = 1 << 6
-
-    # Iterate through each integer in the data
-    for byte in data:
-        mask = 1 << 7
-        if num_bytes == 0:
-            # Count the number of leading 1's in the first byte
-            while mask & byte:
-                num_bytes += 1
-                mask = mask >> 1
-
-            # 1-byte character
-            if num_bytes == 0:
-                continue
-
-            # UTF-8 characters can be 1 to 4 bytes long
-            if num_bytes == 1 or num_bytes > 4:
-                return False
-        else:
-            # Check if the byte is a valid continuation byte
-            if not (byte & mask1 and not (byte & mask2)):
-                return False
-
-        # Decrement the number of bytes to process
-        num_bytes -= 1
-
-    # If we finish processing and there are remaining bytes, return False
-    return num_bytes == 0
+    try:
+        bytes(data).decode(encoding='utf-8', errors='strict')
+        return True
+    except Exception:
+        return False
